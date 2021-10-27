@@ -15,16 +15,16 @@ type (
 
 	// DBConfig stores all the db configs
 	DBConfig struct {
-		MySQL MySQL `yaml:"mysql"`
+		MySQL MySQL `yaml:"mysql" mapstructure:"mysql"`
 	}
 
 	// Config stores all configuration of the application.
 	Config struct {
-		AppURL        string   `yaml:"app_url" mapstructure:"db_source"`
-		AppEnv        string   `yaml:"app_env" mapstructure:"db_source"`
-		AppPort       int      `yaml:"app_port" mapstructure:"db_source"`
-		DBConfig      DBConfig `yaml:"db_config" mapstructure:"db_source"`
-		EncryptionKey string   `yaml:"encryption_key" mapstructure:"db_source"`
+		AppURL        string   `yaml:"app_url" mapstructure:"app_url"`
+		AppEnv        string   `yaml:"app_env" mapstructure:"app_env"`
+		AppPort       int      `yaml:"app_port" mapstructure:"app_port"`
+		DBConfig      DBConfig `yaml:"db_config" mapstructure:"db_config"`
+		EncryptionKey string   `yaml:"encryption_key" mapstructure:"encryption_key"`
 	}
 )
 
