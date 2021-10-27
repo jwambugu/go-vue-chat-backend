@@ -1,0 +1,10 @@
+---
+app_url: https://localhost
+app_env: local
+app_port: 3000
+
+db_config:
+  mysql:
+    db-source: user:password@tcp(host:port)/%s?parseTime=true
+
+encryption_key: ''
