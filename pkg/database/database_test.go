@@ -1,6 +1,6 @@
 //+build integration
 
-package db
+package database
 
 import (
 	"github.com/jmoiron/sqlx"
@@ -15,7 +15,7 @@ func TestNewMySQLConnection(t *testing.T) {
 		expectsError bool
 	}{
 		{
-			name:         "connects to the db successfully",
+			name:         "connects to the database successfully",
 			dsn:          testMySQLDBSource,
 			expectsError: false,
 		},
@@ -25,7 +25,7 @@ func TestNewMySQLConnection(t *testing.T) {
 			expectsError: true,
 		},
 		{
-			name:         "fails to connect to the db due to invalid db name",
+			name:         "fails to connect to the database due to invalid database name",
 			dsn:          "test",
 			expectsError: true,
 		},
