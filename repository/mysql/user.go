@@ -27,6 +27,8 @@ const (
 	FROM users
 	WHERE username = ?
 	  AND deleted_at IS NULL`
+
+	queryUsersCheckIfExists = `SELECT EXISTS(SELECT 1 FROM users WHERE %s = '%s')`
 )
 
 // Create inserts a new user record
@@ -88,6 +90,17 @@ func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models
 	}
 
 	return foundUser, nil
+}
+
+// CheckIfExists looks up if a given column exists
+func (u *userRepo) CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error) {
+	var exists bool
+
+	if err := u.db.GetContext(ctx, &exists, fmt.Sprintf(queryUsersCheckIfExists, column, value)); err != nil {
+		return false, fmt.Errorf("userRepo.CheckIfExists:: error executing query - %v", err)
+	}
+
+	return exists, nil
 }
 
 // NewUserRepository creates a new user repository

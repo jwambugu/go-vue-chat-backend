@@ -25,3 +25,8 @@ func validationError(c *fiber.Ctx, err error) error {
 		"errors": errorsBody,
 	})
 }
+func validationDuplicateError(c *fiber.Ctx, errors fiber.Map) error {
+	return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+		"errors": errors,
+	})
+}

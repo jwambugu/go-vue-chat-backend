@@ -21,7 +21,7 @@ type (
 )
 
 // Register adds and returns the new user created
-func (a *authHandler) Register(c *fiber.Ctx) error {
+func (h *authHandler) Register(c *fiber.Ctx) error {
 	var u *models.User
 
 	if err := c.BodyParser(&u); err != nil {
@@ -38,7 +38,18 @@ func (a *authHandler) Register(c *fiber.Ctx) error {
 	u.CreatedAt = now
 	u.UpdatedAt = now
 
-	newUser, err := a.userService.Create(ctx, u)
+	exists, err := h.userService.CheckIfExists(ctx, "username", "jwambugu")
+	if err != nil {
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	if exists {
+		return validationDuplicateError(c, fiber.Map{
+			"username": "has already been taken",
+		})
+	}
+
+	newUser, err := h.userService.Create(ctx, u)
 	if err != nil {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
@@ -47,7 +58,7 @@ func (a *authHandler) Register(c *fiber.Ctx) error {
 }
 
 // Login attempts to log in a user using the provided credentials
-func (a *authHandler) Login(c *fiber.Ctx) error {
+func (h *authHandler) Login(c *fiber.Ctx) error {
 	return nil
 }
 
