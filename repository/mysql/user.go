@@ -5,6 +5,7 @@ import (
 	"chatapp/services/user"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 )
@@ -57,6 +58,10 @@ func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error
 	foundUser := &models.User{}
 
 	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByID, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+
 		return nil, fmt.Errorf("userRepo.FindByID:: error finding user - %v", err)
 	}
 
@@ -68,6 +73,10 @@ func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models
 	foundUser := &models.User{}
 
 	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByUsername, username); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+
 		return nil, fmt.Errorf("userRepo.FindByUsername:: error finding user - %v", err)
 	}
 
