@@ -7,6 +7,7 @@ import (
 	"chatapp/services/user"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"reflect"
@@ -239,6 +240,88 @@ func TestUserRepo_FindByUsername(t *testing.T) {
 
 			if err == nil && !reflect.DeepEqual(got, tc.wants) {
 				t.Errorf("FindByUsername() = %v, wants %v", got, tc.wants)
+			}
+		})
+	}
+}
+
+func TestUserRepo_CheckIfExists(t *testing.T) {
+	db, mock := mockdb.NewMock()
+	defer func(db *sqlx.DB) {
+		_ = db.Close()
+	}(db)
+
+	repo := NewUserRepository(db)
+	fakeUser := factory.NewUser()
+	fakeUser.ID = 1
+	fakeUser.Username = "jwambugu"
+
+	//rows := sqlmock.NewRows([]string{"id", "username"}).AddRow(fakeUser.ID, fakeUser.Username)
+
+	testCases := []struct {
+		name     string
+		repo     user.Repository
+		mock     func()
+		column   string
+		value    string
+		wants    bool
+		wantsErr bool
+	}{
+		{
+			name: "finds a record, returns true",
+			repo: repo,
+			mock: func() {
+				query := regexp.QuoteMeta(fmt.Sprintf(queryUsersCheckIfExists, "username", "jwambugu"))
+
+				row := sqlmock.NewRows([]string{"exists"}).AddRow(true)
+				mock.ExpectQuery(query).WillReturnRows(row)
+			},
+			column:   "username",
+			value:    "jwambugu",
+			wants:    true,
+			wantsErr: false,
+		},
+		{
+			name: "no existing record is found, returns false",
+			repo: repo,
+			mock: func() {
+				query := regexp.QuoteMeta(fmt.Sprintf(queryUsersCheckIfExists, "username", "jwambugu"))
+
+				row := sqlmock.NewRows([]string{"exists"}).AddRow(false)
+				mock.ExpectQuery(query).WillReturnRows(row)
+			},
+			column:   "username",
+			value:    "jwambugu",
+			wants:    false,
+			wantsErr: false,
+		},
+		{
+			name: "fails to execute because of invalid SQL query",
+			repo: repo,
+			mock: func() {
+				mock.ExpectQuery("SELECTS (.+) FROM users").
+					WithArgs(fakeUser.Username).
+					WillReturnError(errInvalidSQLQuery)
+			},
+			column:   "username",
+			value:    "jwambugu",
+			wants:    false,
+			wantsErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mock()
+
+			got, err := tc.repo.CheckIfExists(context.Background(), tc.column, tc.value)
+			if (err != nil) != tc.wantsErr {
+				t.Errorf("CheckIfExists() error = %v, wantsErr = %v", err, tc.wantsErr)
+				return
+			}
+
+			if err == nil && !reflect.DeepEqual(got, tc.wants) {
+				t.Errorf("CheckIfExists() = %v, wants %v", got, tc.wants)
 			}
 		})
 	}

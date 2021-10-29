@@ -25,11 +25,17 @@ func (s *service) FindByUsername(ctx context.Context, username string) (*models.
 	return s.repo.FindByUsername(ctx, username)
 }
 
+// CheckIfExists looks up if a given column exists
+func (s *service) CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error) {
+	return s.repo.CheckIfExists(ctx, column, value)
+}
+
 // Service provides an interface for interacting with the repository
 type Service interface {
 	Create(ctx context.Context, user *models.User) (*models.User, error)
 	FindByID(ctx context.Context, id uint64) (*models.User, error)
 	FindByUsername(ctx context.Context, username string) (*models.User, error)
+	CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error)
 }
 
 // NewService creates a new Service
