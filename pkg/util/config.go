@@ -13,7 +13,7 @@ type (
 		DBSource string `yaml:"db_source" mapstructure:"db_source"`
 	}
 
-	// DBConfig stores all the db configs
+	// DBConfig stores all the database configs
 	DBConfig struct {
 		MySQL MySQL `yaml:"mysql" mapstructure:"mysql"`
 	}
