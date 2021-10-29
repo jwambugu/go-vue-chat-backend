@@ -6,6 +6,7 @@ import (
 	"chatapp/repository/mockdb"
 	"chatapp/services/user"
 	"context"
+	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"reflect"
@@ -94,6 +95,9 @@ func TestUserRepo_FindByID(t *testing.T) {
 	fakeUser := factory.NewUser()
 	fakeUser.ID = 1
 
+	rows := sqlmock.NewRows([]string{"id", "username", "created_at", "updated_at"}).
+		AddRow(fakeUser.ID, fakeUser.Username, fakeUser.CreatedAt, fakeUser.UpdatedAt)
+
 	testCases := []struct {
 		name     string
 		repo     user.Repository
@@ -106,11 +110,7 @@ func TestUserRepo_FindByID(t *testing.T) {
 			name: "finds user by id",
 			repo: repo,
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"id", "username", "created_at", "updated_at"}).
-					AddRow(fakeUser.ID, fakeUser.Username, fakeUser.CreatedAt, fakeUser.UpdatedAt)
-
 				query := regexp.QuoteMeta(queryUsersFindByID)
-
 				mock.ExpectQuery(query).WithArgs(uint64(1)).WillReturnRows(rows)
 			},
 			id: uint64(1),
@@ -121,6 +121,17 @@ func TestUserRepo_FindByID(t *testing.T) {
 				UpdatedAt: fakeUser.UpdatedAt,
 			},
 			wantsErr: false,
+		},
+		{
+			name: "returns no records if user does not exist",
+			repo: repo,
+			id:   uint64(10),
+			mock: func() {
+				query := regexp.QuoteMeta(queryUsersFindByID)
+				mock.ExpectQuery(query).WithArgs(uint64(10)).WillReturnError(sql.ErrNoRows)
+			},
+			wants:    nil,
+			wantsErr: true,
 		},
 		{
 			name: "fails to find user because of invalid SQL query",
@@ -164,6 +175,9 @@ func TestUserRepo_FindByUsername(t *testing.T) {
 	fakeUser.ID = 1
 	fakeUser.Username = "jwambugu"
 
+	rows := sqlmock.NewRows([]string{"id", "username", "created_at", "updated_at"}).
+		AddRow(fakeUser.ID, fakeUser.Username, fakeUser.CreatedAt, fakeUser.UpdatedAt)
+
 	testCases := []struct {
 		name     string
 		repo     user.Repository
@@ -176,11 +190,7 @@ func TestUserRepo_FindByUsername(t *testing.T) {
 			name: "finds user by username",
 			repo: repo,
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"id", "username", "created_at", "updated_at"}).
-					AddRow(fakeUser.ID, fakeUser.Username, fakeUser.CreatedAt, fakeUser.UpdatedAt)
-
 				query := regexp.QuoteMeta(queryUsersFindByUsername)
-
 				mock.ExpectQuery(query).WithArgs(fakeUser.Username).WillReturnRows(rows)
 			},
 			username: "jwambugu",
@@ -191,6 +201,17 @@ func TestUserRepo_FindByUsername(t *testing.T) {
 				UpdatedAt: fakeUser.UpdatedAt,
 			},
 			wantsErr: false,
+		},
+		{
+			name:     "returns no records if user does not exist",
+			repo:     repo,
+			username: "jay",
+			mock: func() {
+				query := regexp.QuoteMeta(queryUsersFindByUsername)
+				mock.ExpectQuery(query).WithArgs("jay").WillReturnError(sql.ErrNoRows)
+			},
+			wants:    nil,
+			wantsErr: true,
 		},
 		{
 			name:     "fails to find user because of invalid SQL query",
