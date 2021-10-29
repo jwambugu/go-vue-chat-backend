@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,6 +42,12 @@ func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User,
 
 	result, err := stmt.ExecContext(ctx, user.Username, user.Password, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == models.MySQLDuplicateEntryNumber {
+				return nil, models.ErrDuplicateRecord
+			}
+		}
+
 		return nil, fmt.Errorf("userRepo.Create:: error inserting record - %v", err)
 	}
 
