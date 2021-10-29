@@ -1,6 +1,6 @@
 //+build integration
 
-package db
+package database
 
 import (
 	"chatapp/pkg/util"
