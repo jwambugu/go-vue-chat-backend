@@ -4,6 +4,7 @@ import (
 	"chatapp/pkg/models"
 	"chatapp/services/user"
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 )
@@ -13,12 +14,14 @@ type userRepo struct {
 }
 
 const (
-	usersQueryCreate   = `INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, ?, ?)`
-	usersQueryFindByID = `SELECT id, username, password, created_at, updated_at, deleted_at
+	queryCreateUser = `INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, ?, ?)`
+
+	queryUsersFindByID = `SELECT id, username, password, created_at, updated_at, deleted_at
 	FROM users
 	WHERE id = ?
 	  AND deleted_at IS NULL`
-	usersQueryFindByUsername = `SELECT id, username, password, created_at, updated_at, deleted_at
+
+	queryUsersFindByUsername = `SELECT id, username, password, created_at, updated_at, deleted_at
 	FROM users
 	WHERE username = ?
 	  AND deleted_at IS NULL`
@@ -26,14 +29,23 @@ const (
 
 // Create inserts a new user record
 func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User, error) {
-	result, err := u.db.ExecContext(ctx, usersQueryCreate, user.Username, user.Password, user.CreatedAt, user.UpdatedAt)
+	stmt, err := u.db.PrepareContext(ctx, queryCreateUser)
 	if err != nil {
-		return nil, fmt.Errorf("userRepo.Create:: error creating new user - %v", err)
+		return nil, fmt.Errorf("userRepo.Create:: error creating prepared stmt - %v", err)
+	}
+
+	defer func(stmt *sql.Stmt) {
+		_ = stmt.Close()
+	}(stmt)
+
+	result, err := stmt.ExecContext(ctx, user.Username, user.Password, user.CreatedAt, user.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("userRepo.Create:: error inserting record - %v", err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, fmt.Errorf("userRepo.Create:: error getting new user id - %v", err)
+		return nil, fmt.Errorf("userRepo.Create:: error getting id - %v", err)
 	}
 
 	user.ID = uint64(id)
@@ -44,7 +56,7 @@ func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User,
 func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.SelectContext(ctx, &foundUser, usersQueryFindByID, id); err != nil {
+	if err := u.db.SelectContext(ctx, &foundUser, queryUsersFindByID, id); err != nil {
 		return nil, fmt.Errorf("userRepo.FindByID:: error finding user - %v", err)
 	}
 
@@ -55,7 +67,7 @@ func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error
 func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.SelectContext(ctx, &foundUser, usersQueryFindByUsername, username); err != nil {
+	if err := u.db.SelectContext(ctx, &foundUser, queryUsersFindByUsername, username); err != nil {
 		return nil, fmt.Errorf("userRepo.FindByUsername:: error finding user - %v", err)
 	}
 
