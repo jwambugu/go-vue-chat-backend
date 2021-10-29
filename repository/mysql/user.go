@@ -16,7 +16,7 @@ type userRepo struct {
 const (
 	queryCreateUser = `INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, ?, ?)`
 
-	queryUsersFindByID = `SELECT id, username, password, created_at, updated_at, deleted_at
+	queryUsersFindByID = `SELECT id, username, created_at, updated_at
 	FROM users
 	WHERE id = ?
 	  AND deleted_at IS NULL`
@@ -56,7 +56,7 @@ func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User,
 func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.SelectContext(ctx, &foundUser, queryUsersFindByID, id); err != nil {
+	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByID, id); err != nil {
 		return nil, fmt.Errorf("userRepo.FindByID:: error finding user - %v", err)
 	}
 
@@ -67,7 +67,7 @@ func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error
 func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.SelectContext(ctx, &foundUser, queryUsersFindByUsername, username); err != nil {
+	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByUsername, username); err != nil {
 		return nil, fmt.Errorf("userRepo.FindByUsername:: error finding user - %v", err)
 	}
 
