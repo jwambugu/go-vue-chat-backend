@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"chatapp/pkg/models"
+	"chatapp/pkg/util"
 	"chatapp/services/user"
 	"context"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,7 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 	var u *models.User
 
 	if err := c.BodyParser(&u); err != nil {
-		return serverError(c, fiber.StatusInternalServerError, err.Error())
+		return serverError(c, fiber.StatusUnprocessableEntity, err.Error())
 	}
 
 	if err := u.ValidateRegisterRequest(); err != nil {
@@ -33,12 +34,12 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 	}
 
 	ctx := context.Background()
-	now := time.Now()
+	now := time.Now().Local()
 
 	u.CreatedAt = now
 	u.UpdatedAt = now
 
-	exists, err := h.userService.CheckIfExists(ctx, "username", "jwambugu")
+	exists, err := h.userService.CheckIfExists(ctx, "username", u.Username)
 	if err != nil {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
@@ -48,6 +49,13 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 			"username": "has already been taken",
 		})
 	}
+
+	hashedPassword, err := util.HashPassword(u.Password)
+	if err != nil {
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	u.Password = hashedPassword
 
 	newUser, err := h.userService.Create(ctx, u)
 	if err != nil {
