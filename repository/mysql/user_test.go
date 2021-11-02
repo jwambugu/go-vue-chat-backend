@@ -326,3 +326,80 @@ func TestUserRepo_CheckIfExists(t *testing.T) {
 		})
 	}
 }
+
+func TestUserRepo_GetIDAndPassword(t *testing.T) {
+	db, mock := mockdb.NewMock()
+	defer func(db *sqlx.DB) {
+		_ = db.Close()
+	}(db)
+
+	repo := NewUserRepository(db)
+	fakeUser := factory.NewUser()
+	fakeUser.ID = 1
+	fakeUser.Username = "jwambugu"
+
+	rows := sqlmock.NewRows([]string{"id", "password"}).AddRow(fakeUser.ID, fakeUser.Password)
+
+	testCases := []struct {
+		name     string
+		repo     user.Repository
+		mock     func()
+		username string
+		wants    *models.User
+		wantsErr bool
+	}{
+		{
+			name: "finds user id and password",
+			repo: repo,
+			mock: func() {
+				query := regexp.QuoteMeta(queryUsersFindIDAndPassword)
+				mock.ExpectQuery(query).WithArgs(fakeUser.Username).WillReturnRows(rows)
+			},
+			username: "jwambugu",
+			wants: &models.User{
+				ID:       fakeUser.ID,
+				Password: fakeUser.Password,
+			},
+			wantsErr: false,
+		},
+		{
+			name:     "returns no records if user does not exist",
+			repo:     repo,
+			username: "jay",
+			mock: func() {
+				query := regexp.QuoteMeta(queryUsersFindIDAndPassword)
+				mock.ExpectQuery(query).WithArgs("jay").WillReturnError(sql.ErrNoRows)
+			},
+			wants:    nil,
+			wantsErr: true,
+		},
+		{
+			name:     "fails to find user because of invalid SQL query",
+			repo:     repo,
+			username: "jwambugu",
+			mock: func() {
+				mock.ExpectQuery("SELECTS (.+) FROM users").
+					WithArgs(fakeUser.Username).
+					WillReturnError(errInvalidSQLQuery)
+			},
+			wants:    nil,
+			wantsErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mock()
+
+			got, err := tc.repo.GetIDAndPassword(context.Background(), tc.username)
+			if (err != nil) != tc.wantsErr {
+				t.Errorf("GetIDAndPassword() error = %v, wantsErr = %v", err, tc.wantsErr)
+				return
+			}
+
+			if err == nil && !reflect.DeepEqual(got, tc.wants) {
+				t.Errorf("GetIDAndPassword() = %v, wants %v", got, tc.wants)
+			}
+		})
+	}
+}
