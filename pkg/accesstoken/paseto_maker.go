@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+var (
+	// ErrInvalidPasetoKeySize ia returned if the paseto token is not of expected size
+	ErrInvalidPasetoKeySize = fmt.Errorf("accesstoken: key must be %d characters", chacha20poly1305.KeySize)
+)
+
 type footer map[string]interface{}
 
 // PasetoMaker is a new paseto token maker
@@ -55,7 +60,7 @@ func (m *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 // NewPasetoMaker creates a new PasetoMaker
 func NewPasetoMaker(key string) (Maker, error) {
 	if len(key) != chacha20poly1305.KeySize {
-		return nil, fmt.Errorf("accesstoken.NewPasetoMaker:: key must be of length %d", chacha20poly1305.KeySize)
+		return nil, ErrInvalidPasetoKeySize
 	}
 
 	maker := &PasetoMaker{
