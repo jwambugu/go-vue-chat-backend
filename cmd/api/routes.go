@@ -16,5 +16,6 @@ func (app *application) routes() *fiber.App {
 	})
 
 	auth.Post("/register", authHandler.Register)
+	auth.Post("/login", authHandler.Login)
 	return fiberApp
 }

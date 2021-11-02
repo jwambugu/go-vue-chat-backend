@@ -30,12 +30,18 @@ func (s *service) CheckIfExists(ctx context.Context, column string, value interf
 	return s.repo.CheckIfExists(ctx, column, value)
 }
 
+// GetIDAndPassword returns the id and password for the user to be user for logging in
+func (s *service) GetIDAndPassword(ctx context.Context, username string) (*models.User, error) {
+	return s.repo.GetIDAndPassword(ctx, username)
+}
+
 // Service provides an interface for interacting with the repository
 type Service interface {
 	Create(ctx context.Context, user *models.User) (*models.User, error)
 	FindByID(ctx context.Context, id uint64) (*models.User, error)
 	FindByUsername(ctx context.Context, username string) (*models.User, error)
 	CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error)
+	GetIDAndPassword(ctx context.Context, username string) (*models.User, error)
 }
 
 // NewService creates a new Service
