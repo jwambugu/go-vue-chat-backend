@@ -23,12 +23,16 @@ const (
 	WHERE id = ?
 	  AND deleted_at IS NULL`
 
-	queryUsersFindByUsername = `SELECT id, username, password, created_at, updated_at, deleted_at
+	queryUsersFindByUsername = `SELECT id, username, created_at, updated_at, deleted_at
 	FROM users
 	WHERE username = ?
 	  AND deleted_at IS NULL`
 
 	queryUsersCheckIfExists = `SELECT EXISTS(SELECT 1 FROM users WHERE %s = '%s')`
+
+	queryUsersFindIDAndPassword = `SELECT id, password FROM users
+		WHERE username = ?
+		  AND deleted_at IS NULL`
 )
 
 // Create inserts a new user record
@@ -101,6 +105,21 @@ func (u *userRepo) CheckIfExists(ctx context.Context, column string, value inter
 	}
 
 	return exists, nil
+}
+
+// GetIDAndPassword returns the id and password for the user to be user for logging in
+func (u *userRepo) GetIDAndPassword(ctx context.Context, username string) (*models.User, error) {
+	foundUser := &models.User{}
+
+	if err := u.db.GetContext(ctx, foundUser, queryUsersFindIDAndPassword, username); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+
+		return nil, fmt.Errorf("userRepo.FindByUsername:: error finding user - %v", err)
+	}
+
+	return foundUser, nil
 }
 
 // NewUserRepository creates a new user repository

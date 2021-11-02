@@ -22,3 +22,11 @@ func (u User) ValidateRegisterRequest() error {
 		validation.Field(&u.Password, validation.Required, validation.Length(8, 0)),
 	)
 }
+
+// ValidateLoginRequest validates incoming login request
+func (u User) ValidateLoginRequest() error {
+	return validation.ValidateStruct(&u,
+		validation.Field(&u.Username, validation.Required),
+		validation.Field(&u.Password, validation.Required, validation.Length(8, 0)),
+	)
+}
