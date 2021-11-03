@@ -74,7 +74,7 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 	var u *models.User
 
 	if err := c.BodyParser(&u); err != nil {
-		return serverError(c, fiber.StatusUnprocessableEntity, err.Error())
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	if err := u.ValidateRegisterRequest(); err != nil {
@@ -123,7 +123,7 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 	var u *models.User
 
 	if err := c.BodyParser(&u); err != nil {
-		return serverError(c, fiber.StatusUnprocessableEntity, err.Error())
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	if err := u.ValidateLoginRequest(); err != nil {
@@ -155,7 +155,7 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return successResponse(c, fiber.StatusCreated, successAuthResponse(authUser, token))
+	return successResponse(c, fiber.StatusOK, successAuthResponse(authUser, token))
 }
 
 // AuthHandler is an interface for the user authentication
