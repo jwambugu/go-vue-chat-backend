@@ -8,6 +8,8 @@ import (
 func (app *application) routes() *fiber.App {
 	fiberApp := fiber.New()
 
+	registerFiberMiddleware(fiberApp)
+
 	v1 := fiberApp.Group("api/v1")
 
 	auth := v1.Group("/auth")
