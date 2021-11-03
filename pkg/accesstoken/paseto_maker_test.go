@@ -55,7 +55,13 @@ func TestPasetoMaker_VerifyToken(t *testing.T) {
 	assert.NoError(t, err)
 
 	user := factory.NewUser()
-	token, err := maker.CreateToken(user, 1*time.Minute)
+	user.ID = 1
+
+	duration := time.Minute
+	issuedAt := time.Now()
+	expiresAt := issuedAt.Add(duration)
+
+	token, err := maker.CreateToken(user, duration)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
@@ -63,6 +69,9 @@ func TestPasetoMaker_VerifyToken(t *testing.T) {
 	payload, err := maker.VerifyToken(token)
 	assert.NoError(t, err)
 	assert.NotNil(t, payload)
+	assert.Equal(t, user.ID, payload.User.ID)
+	assert.WithinDuration(t, issuedAt, payload.IssuedAt, 1*time.Second)
+	assert.WithinDuration(t, expiresAt, payload.ExpiresAt, 1*time.Second)
 }
 
 func TestPasetoMaker_VerifyToken_Expired(t *testing.T) {
