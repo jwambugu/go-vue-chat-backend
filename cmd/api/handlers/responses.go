@@ -41,7 +41,7 @@ func validationDuplicateError(c *fiber.Ctx, errors fiber.Map) error {
 }
 
 // successResponse returns all 2xx responses
-func successResponse(c *fiber.Ctx, status int, data fiber.Map) error {
+func successResponse(c *fiber.Ctx, status int, data interface{}) error {
 	return c.Status(status).JSON(fiber.Map{
 		"data": data,
 	})

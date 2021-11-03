@@ -8,3 +8,4 @@ db_config:
     db_source: user:password@tcp(host:port)/%s?parseTime=true
 
 encryption_key: ''
+paseto_key: ''
