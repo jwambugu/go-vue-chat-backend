@@ -25,6 +25,7 @@ type (
 		AppPort       int      `yaml:"app_port" mapstructure:"app_port"`
 		DBConfig      DBConfig `yaml:"db_config" mapstructure:"db_config"`
 		EncryptionKey string   `yaml:"encryption_key" mapstructure:"encryption_key"`
+		PasetoKey     string   `yaml:"paseto_key" mapstructure:"paseto_key"`
 	}
 )
 

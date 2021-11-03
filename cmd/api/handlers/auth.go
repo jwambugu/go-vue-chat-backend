@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"chatapp/pkg/accesstoken"
 	"chatapp/pkg/models"
 	"chatapp/pkg/util"
 	"chatapp/services/user"
@@ -17,13 +18,56 @@ type (
 	// AuthHandlerOptions represents the options required to set up the auth handler
 	AuthHandlerOptions struct {
 		UserService user.Service
+		PasetoKey   string
 	}
 
 	// authHandler handles user auth
 	authHandler struct {
 		userService user.Service
+		pasetoKey   string
+	}
+
+	authUser struct {
+		ID        uint64    `json:"id,omitempty"`
+		Username  string    `json:"username,omitempty"`
+		CreatedAt time.Time `json:"created_at,omitempty" `
+		UpdatedAt time.Time `json:"updated_at,omitempty"`
+	}
+
+	// authUserResponse has fields returned when a user authenticates successfully
+	authUserResponse struct {
+		User  authUser `json:"user,omitempty"`
+		Token string   `json:"token,omitempty"`
 	}
 )
+
+// generateAccessToken attempts to create an access token to authenticate the user
+func (h *authHandler) generateAccessToken(user *models.User) (string, error) {
+	maker, err := accesstoken.NewPasetoMaker(h.pasetoKey)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := maker.CreateToken(user, 30*time.Minute)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// successAuthResponse builds the response data used when a user registers or logs in
+func successAuthResponse(user *models.User, token string) authUserResponse {
+	return authUserResponse{
+		User: authUser{
+			ID:        user.ID,
+			Username:  user.Username,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		},
+		Token: token,
+	}
+}
 
 // Register adds and returns the new user created
 func (h *authHandler) Register(c *fiber.Ctx) error {
@@ -66,14 +110,12 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return successResponse(c, fiber.StatusCreated, fiber.Map{
-		"user": models.User{
-			ID:        newUser.ID,
-			Username:  newUser.Username,
-			CreatedAt: newUser.CreatedAt,
-			UpdatedAt: newUser.UpdatedAt,
-		},
-	})
+	token, err := h.generateAccessToken(newUser)
+	if err != nil {
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return successResponse(c, fiber.StatusCreated, successAuthResponse(newUser, token))
 }
 
 // Login attempts to log in a user using the provided credentials
@@ -108,14 +150,12 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return successResponse(c, fiber.StatusCreated, fiber.Map{
-		"user": models.User{
-			ID:        authUser.ID,
-			Username:  authUser.Username,
-			CreatedAt: authUser.CreatedAt,
-			UpdatedAt: authUser.UpdatedAt,
-		},
-	})
+	token, err := h.generateAccessToken(authUser)
+	if err != nil {
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return successResponse(c, fiber.StatusCreated, successAuthResponse(authUser, token))
 }
 
 // AuthHandler is an interface for the user authentication
@@ -128,5 +168,6 @@ type AuthHandler interface {
 func NewAuthHandler(opts AuthHandlerOptions) AuthHandler {
 	return &authHandler{
 		userService: opts.UserService,
+		pasetoKey:   opts.PasetoKey,
 	}
 }

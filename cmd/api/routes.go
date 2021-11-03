@@ -13,6 +13,7 @@ func (app *application) routes() *fiber.App {
 	auth := v1.Group("/auth")
 	authHandler := handlers.NewAuthHandler(handlers.AuthHandlerOptions{
 		UserService: app.userService,
+		PasetoKey:   app.config.PasetoKey,
 	})
 
 	auth.Post("/register", authHandler.Register)
