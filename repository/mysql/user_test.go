@@ -36,7 +36,7 @@ func TestUserRepo_Create(t *testing.T) {
 			name: "creates a new user",
 			repo: repo,
 			mock: func() {
-				query := regexp.QuoteMeta(queryCreateUser)
+				query := regexp.QuoteMeta(queryUsersCreate)
 
 				mock.ExpectPrepare(query).
 					ExpectExec().
