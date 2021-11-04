@@ -12,4 +12,5 @@ type Repository interface {
 	FindByUUID(ctx context.Context, uuid string) (*models.ChatRoom, error)
 	CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error)
 	SoftDelete(ctx context.Context, id uint64) error
+	GetUserChatRooms(ctx context.Context, userID uint64) ([]models.ChatRoom, error)
 }
