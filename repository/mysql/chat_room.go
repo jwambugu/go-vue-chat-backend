@@ -17,8 +17,8 @@ type chatRoomRepo struct {
 }
 
 const (
-	queryChatRoomCreate = `INSERT INTO chat_rooms (uuid, name, users_count, is_private, created_at, updated_at)
-	VALUES (?, ?, ?, ?, ?, ?)`
+	queryChatRoomCreate = `INSERT INTO chat_rooms (uuid, name, users_count, is_private, user_id, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	queryChatRoomFindByID = `SELECT id, uuid, name, users_count, is_private, created_at, updated_at
 	FROM chat_rooms WHERE id = ?
@@ -42,7 +42,9 @@ func (r *chatRoomRepo) Create(ctx context.Context, room *models.ChatRoom) (*mode
 		_ = stmt.Close()
 	}(stmt)
 
-	result, err := stmt.ExecContext(ctx, room.UUID, room.Name, room.UsersCount, room.CreatedAt, room.UpdatedAt)
+	result, err := stmt.ExecContext(ctx, room.UUID, room.Name, room.UsersCount, room.IsPrivate, room.UserID,
+		room.CreatedAt, room.UpdatedAt)
+
 	if err != nil {
 		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
 			if mysqlErr.Number == models.MySQLDuplicateEntryNumber {
