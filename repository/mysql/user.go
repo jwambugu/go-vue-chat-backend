@@ -11,12 +11,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// userRepo implements user.Repository
 type userRepo struct {
 	db *sqlx.DB
 }
 
 const (
-	queryCreateUser = `INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, ?, ?)`
+	queryUsersCreate = `INSERT INTO users (username, password, created_at, updated_at) VALUES (?, ?, ?, ?)`
 
 	queryUsersFindByID = `SELECT id, username, created_at, updated_at
 	FROM users
@@ -36,8 +37,8 @@ const (
 )
 
 // Create inserts a new user record
-func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User, error) {
-	stmt, err := u.db.PrepareContext(ctx, queryCreateUser)
+func (r *userRepo) Create(ctx context.Context, user *models.User) (*models.User, error) {
+	stmt, err := r.db.PrepareContext(ctx, queryUsersCreate)
 	if err != nil {
 		return nil, fmt.Errorf("userRepo.Create:: error creating prepared stmt - %v", err)
 	}
@@ -67,10 +68,10 @@ func (u *userRepo) Create(ctx context.Context, user *models.User) (*models.User,
 }
 
 // FindByID fetches a user using the provided ID
-func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error) {
+func (r *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByID, id); err != nil {
+	if err := r.db.GetContext(ctx, foundUser, queryUsersFindByID, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, models.ErrNoRecord
 		}
@@ -82,10 +83,10 @@ func (u *userRepo) FindByID(ctx context.Context, id uint64) (*models.User, error
 }
 
 // FindByUsername fetches a user using the provided username
-func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models.User, error) {
+func (r *userRepo) FindByUsername(ctx context.Context, username string) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.GetContext(ctx, foundUser, queryUsersFindByUsername, username); err != nil {
+	if err := r.db.GetContext(ctx, foundUser, queryUsersFindByUsername, username); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, models.ErrNoRecord
 		}
@@ -97,10 +98,10 @@ func (u *userRepo) FindByUsername(ctx context.Context, username string) (*models
 }
 
 // CheckIfExists looks up if a given column exists
-func (u *userRepo) CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error) {
+func (r *userRepo) CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error) {
 	var exists bool
 
-	if err := u.db.GetContext(ctx, &exists, fmt.Sprintf(queryUsersCheckIfExists, column, value)); err != nil {
+	if err := r.db.GetContext(ctx, &exists, fmt.Sprintf(queryUsersCheckIfExists, column, value)); err != nil {
 		return false, fmt.Errorf("userRepo.CheckIfExists:: error executing query - %v", err)
 	}
 
@@ -108,10 +109,10 @@ func (u *userRepo) CheckIfExists(ctx context.Context, column string, value inter
 }
 
 // GetIDAndPassword returns the id and password for the user to be user for logging in
-func (u *userRepo) GetIDAndPassword(ctx context.Context, username string) (*models.User, error) {
+func (r *userRepo) GetIDAndPassword(ctx context.Context, username string) (*models.User, error) {
 	foundUser := &models.User{}
 
-	if err := u.db.GetContext(ctx, foundUser, queryUsersFindIDAndPassword, username); err != nil {
+	if err := r.db.GetContext(ctx, foundUser, queryUsersFindIDAndPassword, username); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, models.ErrNoRecord
 		}
