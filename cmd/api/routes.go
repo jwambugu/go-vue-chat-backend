@@ -26,8 +26,9 @@ func (app *application) routes() *fiber.App {
 		ChatRoomService: app.chatroomService,
 	})
 
+	chatRooms.Get("/", chatRoomsHandler.Index)
 	chatRooms.Post("/", chatRoomsHandler.Store)
-	chatRooms.Get("/:id/id", chatRoomsHandler.GetByID)
+	chatRooms.Get("/:id", chatRoomsHandler.Show)
 	chatRooms.Get("/:uuid/uuid", chatRoomsHandler.GetByUUID)
 	chatRooms.Delete("/:id", chatRoomsHandler.Destroy)
 

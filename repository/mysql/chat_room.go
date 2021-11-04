@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 // chatRoomRepo implements chatroom.Repository
@@ -29,6 +30,10 @@ const (
 		AND deleted_at IS NULL`
 
 	queryChatRoomSoftDelete = `UPDATE chat_rooms SET deleted_at = ? WHERE id = ?`
+
+	queryChatRoomFindByUserID = `SELECT id, uuid, name, users_count, is_private, created_at, updated_at
+	FROM chat_rooms WHERE id = ?
+		AND deleted_at IS NULL`
 )
 
 // Create adds a new models.ChatRoom
@@ -116,12 +121,33 @@ func (r *chatRoomRepo) SoftDelete(ctx context.Context, id uint64) error {
 		_ = stmt.Close()
 	}(stmt)
 
-	_, err = stmt.ExecContext(ctx, id)
+	deletedAt := time.Now()
+
+	_, err = stmt.ExecContext(ctx, deletedAt, id)
 	if err != nil {
 		return fmt.Errorf("chatRoomRepo.SoftDelete:: error updating record - %v", err)
 	}
 
 	return nil
+}
+
+// GetUserChatRooms returns  []models.ChatRoom for the models.User
+func (r *chatRoomRepo) GetUserChatRooms(ctx context.Context, userID uint64) ([]models.ChatRoom, error) {
+	var chatRooms []models.ChatRoom
+
+	if err := r.db.SelectContext(ctx, &chatRooms, queryChatRoomFindByUserID, userID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, models.ErrNoRecord
+		}
+
+		return nil, fmt.Errorf("chatRoomRepo.GetUserChatRooms:: error getting user chatrooms - %v", err)
+	}
+
+	if len(chatRooms) == 0 {
+		return []models.ChatRoom{}, nil
+	}
+
+	return chatRooms, nil
 }
 
 // NewChatRoomRepository creates a new chat room repository

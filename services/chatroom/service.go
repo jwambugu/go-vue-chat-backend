@@ -35,6 +35,11 @@ func (s service) SoftDelete(ctx context.Context, id uint64) error {
 	return s.repo.SoftDelete(ctx, id)
 }
 
+// GetUserChatRooms returns  []models.ChatRoom for the models.User
+func (s *service) GetUserChatRooms(ctx context.Context, userID uint64) ([]models.ChatRoom, error) {
+	return s.repo.GetUserChatRooms(ctx, userID)
+}
+
 // Service provides an interface for interacting with the repository
 type Service interface {
 	Create(ctx context.Context, room *models.ChatRoom) (*models.ChatRoom, error)
@@ -42,6 +47,7 @@ type Service interface {
 	FindByUUID(ctx context.Context, uuid string) (*models.ChatRoom, error)
 	CheckIfExists(ctx context.Context, column string, value interface{}) (bool, error)
 	SoftDelete(ctx context.Context, id uint64) error
+	GetUserChatRooms(ctx context.Context, userID uint64) ([]models.ChatRoom, error)
 }
 
 // NewService creates a new Service

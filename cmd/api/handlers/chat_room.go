@@ -26,7 +26,31 @@ type (
 	}
 )
 
-// Store creates a new models.ChatRoom
+// findChatRoomError returns the errors that occur fetching a chat room
+func findChatRoomError(c *fiber.Ctx, err error) error {
+	if errors.Is(err, models.ErrNoRecord) {
+		return clientError(c, fiber.StatusNotFound, "Chat room not found.")
+	}
+
+	return serverError(c, fiber.StatusInternalServerError, err.Error())
+}
+
+// Index returns the auth user chat-rooms
+func (h *chatRoomHandler) Index(c *fiber.Ctx) error {
+	// TODO get the user id from the token payload
+	userID := 1
+
+	chatRooms, err := h.chatRoomService.GetUserChatRooms(c.Context(), uint64(userID))
+	if err != nil {
+		return serverError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return successResponse(c, fiber.StatusOK, fiber.Map{
+		"chat_rooms": chatRooms,
+	})
+}
+
+// Store creates a new chat room
 func (h *chatRoomHandler) Store(c *fiber.Ctx) error {
 	var chatRoom *models.ChatRoom
 
@@ -55,22 +79,13 @@ func (h *chatRoomHandler) Store(c *fiber.Ctx) error {
 	}
 
 	return successResponse(c, fiber.StatusCreated, fiber.Map{
-		"chat_room": newChatRoom,
+		"chatroom": newChatRoom,
 	})
 }
 
-// findChatRoomError returns the errors that occur fetching a chat room
-func findChatRoomError(c *fiber.Ctx, err error) error {
-	if errors.Is(err, models.ErrNoRecord) {
-		return clientError(c, fiber.StatusNotFound, "Chat room not found.")
-	}
-
-	return serverError(c, fiber.StatusInternalServerError, err.Error())
-}
-
-// GetByID finds a models.ChatRoom by ID
-func (h *chatRoomHandler) GetByID(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Get("id"))
+// Show finds a chatroom by its ID
+func (h *chatRoomHandler) Show(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
 		return clientError(c, fiber.StatusBadRequest, errInvalidCharRoomID)
@@ -82,13 +97,13 @@ func (h *chatRoomHandler) GetByID(c *fiber.Ctx) error {
 	}
 
 	return successResponse(c, fiber.StatusOK, fiber.Map{
-		"chat_room": chatRoom,
+		"chatroom": chatRoom,
 	})
 }
 
 // GetByUUID finds a models.ChatRoom by UUID
 func (h *chatRoomHandler) GetByUUID(c *fiber.Ctx) error {
-	chatRoomUUID := c.Get("uuid")
+	chatRoomUUID := c.Params("uuid")
 
 	chatRoom, err := h.chatRoomService.FindByUUID(c.Context(), chatRoomUUID)
 	if err != nil {
@@ -96,13 +111,13 @@ func (h *chatRoomHandler) GetByUUID(c *fiber.Ctx) error {
 	}
 
 	return successResponse(c, fiber.StatusOK, fiber.Map{
-		"chat_room": chatRoom,
+		"chatroom": chatRoom,
 	})
 }
 
 // Destroy soft deletes a models.ChatRoom
 func (h *chatRoomHandler) Destroy(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Get("id"))
+	id, err := strconv.Atoi(c.Params("id"))
 
 	if err != nil {
 		return clientError(c, fiber.StatusBadRequest, errInvalidCharRoomID)
@@ -119,8 +134,9 @@ func (h *chatRoomHandler) Destroy(c *fiber.Ctx) error {
 
 // ChatRoomHandler is an interface for rooms interactions
 type ChatRoomHandler interface {
+	Index(c *fiber.Ctx) error
 	Store(c *fiber.Ctx) error
-	GetByID(c *fiber.Ctx) error
+	Show(c *fiber.Ctx) error
 	GetByUUID(c *fiber.Ctx) error
 	Destroy(c *fiber.Ctx) error
 }
