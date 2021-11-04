@@ -4,6 +4,7 @@ import (
 	"chatapp/pkg/database"
 	"chatapp/pkg/util"
 	"chatapp/repository/mysql"
+	"chatapp/services/chatroom"
 	"chatapp/services/user"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -18,9 +19,10 @@ var (
 
 // application provides dependency injection across the system
 type application struct {
-	config      *util.Config
-	db          *sqlx.DB
-	userService user.Service
+	config          *util.Config
+	db              *sqlx.DB
+	userService     user.Service
+	chatroomService chatroom.Service
 }
 
 func init() {
@@ -41,6 +43,7 @@ func (app *application) initServices() {
 
 	app.db = db
 	app.userService = user.NewService(mysql.NewUserRepository(app.db))
+	app.chatroomService = chatroom.NewService(mysql.NewChatRoomRepository(app.db))
 }
 
 func main() {
