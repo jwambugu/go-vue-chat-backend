@@ -20,5 +20,16 @@ func (app *application) routes() *fiber.App {
 
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+
+	chatRooms := v1.Group("/chat-rooms")
+	chatRoomsHandler := handlers.NewChatRoomHandler(handlers.ChatRoomHandlerOptions{
+		ChatRoomService: app.chatroomService,
+	})
+
+	chatRooms.Post("/", chatRoomsHandler.Store)
+	chatRooms.Get("/:id/id", chatRoomsHandler.GetByID)
+	chatRooms.Get("/:uuid/uuid", chatRoomsHandler.GetByUUID)
+	chatRooms.Delete("/:id", chatRoomsHandler.Destroy)
+
 	return fiberApp
 }

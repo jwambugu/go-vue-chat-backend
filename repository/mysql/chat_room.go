@@ -124,8 +124,8 @@ func (r *chatRoomRepo) SoftDelete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-// NewChatRoomRepo creates a new chat room repository
-func NewChatRoomRepo(db *sqlx.DB) chatroom.Repository {
+// NewChatRoomRepository creates a new chat room repository
+func NewChatRoomRepository(db *sqlx.DB) chatroom.Repository {
 	return &chatRoomRepo{
 		db: db,
 	}
