@@ -13,6 +13,9 @@ var (
 	ErrInvalidToken = errors.New("token is invalid")
 )
 
+// AuthUserToken is a  key to be used to pass auth user data between requests
+const AuthUserToken = "auth_user_token"
+
 // Payload contains the payload for the access token
 type Payload struct {
 	UUID      uuid.UUID    `json:"uuid"`
