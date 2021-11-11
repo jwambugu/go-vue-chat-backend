@@ -32,7 +32,7 @@ const (
 	queryChatRoomSoftDelete = `UPDATE chat_rooms SET deleted_at = ? WHERE id = ?`
 
 	queryChatRoomFindByUserID = `SELECT id, uuid, name, users_count, is_private, created_at, updated_at
-	FROM chat_rooms WHERE id = ?
+	FROM chat_rooms WHERE user_id = ?
 		AND deleted_at IS NULL`
 )
 

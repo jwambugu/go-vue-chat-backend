@@ -62,7 +62,11 @@ func (h *chatRoomHandler) Store(c *fiber.Ctx) error {
 		return validationError(c, err)
 	}
 
+	// TODO get the user id from the token payload
+	userID := 1
+
 	now := time.Now()
+	chatRoom.UserID = uint64(userID)
 	chatRoom.CreatedAt = now
 	chatRoom.UpdatedAt = now
 
