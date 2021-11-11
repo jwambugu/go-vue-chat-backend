@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"chatapp/pkg/accesstoken"
 	"chatapp/pkg/models"
 	"chatapp/services/chatroom"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"log"
 	"strconv"
 	"time"
 )
@@ -39,12 +37,9 @@ func findChatRoomError(c *fiber.Ctx, err error) error {
 
 // Index returns the auth user chat-rooms
 func (h *chatRoomHandler) Index(c *fiber.Ctx) error {
-	// TODO get the user id from the token payload
-	userID := 1
+	user := getAuthUser(c)
 
-	log.Println(c.Locals(accesstoken.AuthUserToken))
-
-	chatRooms, err := h.chatRoomService.GetUserChatRooms(c.Context(), uint64(userID))
+	chatRooms, err := h.chatRoomService.GetUserChatRooms(c.Context(), user.ID)
 	if err != nil {
 		return serverError(c, fiber.StatusInternalServerError, err.Error())
 	}
@@ -66,11 +61,10 @@ func (h *chatRoomHandler) Store(c *fiber.Ctx) error {
 		return validationError(c, err)
 	}
 
-	// TODO get the user id from the token payload
-	userID := 1
-
+	user := getAuthUser(c)
 	now := time.Now()
-	chatRoom.UserID = uint64(userID)
+
+	chatRoom.UserID = user.ID
 	chatRoom.CreatedAt = now
 	chatRoom.UpdatedAt = now
 

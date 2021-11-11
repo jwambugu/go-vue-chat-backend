@@ -158,6 +158,16 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 	return successResponse(c, fiber.StatusOK, successAuthResponse(authUser, token))
 }
 
+// getAuthUserTokenPayload parses the value stored from the auth middleware to token payload
+func getAuthUserTokenPayload(c *fiber.Ctx) *accesstoken.Payload {
+	return c.Locals(accesstoken.AuthUserToken).(*accesstoken.Payload)
+}
+
+// getAuthUser returns the current auth user from the token payload
+func getAuthUser(c *fiber.Ctx) *models.User {
+	return getAuthUserTokenPayload(c).User
+}
+
 // AuthHandler is an interface for the user authentication
 type AuthHandler interface {
 	Register(c *fiber.Ctx) error
