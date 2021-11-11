@@ -21,7 +21,7 @@ func (app *application) routes() *fiber.App {
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
 
-	chatRooms := v1.Group("/chat-rooms")
+	chatRooms := v1.Group("/chat-rooms").Use(app.authMiddleware())
 	chatRoomsHandler := handlers.NewChatRoomHandler(handlers.ChatRoomHandlerOptions{
 		ChatRoomService: app.chatroomService,
 	})
